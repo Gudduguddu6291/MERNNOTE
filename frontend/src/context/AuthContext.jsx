@@ -6,7 +6,7 @@ let value ={serverURL,}
 function AuthContext({children}){
     return (
         <authDatacontext.Provider value={value}>
-            <App/>
+            {children}
         </authDatacontext.Provider>
     )
 }

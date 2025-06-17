@@ -4,10 +4,12 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Nav from "../components/Nav";
 import './Login2.css'
-import AuthContext, { authDatacontext } from "../context/AuthContext";
+import  { authDatacontext } from "../context/AuthContext";
+import { userDataContext } from "../context/UserContext";
 
 export default function Login2() {
   let {serverURL} = useContext(authDatacontext)
+  let {userData, setuserData} = useContext(userDataContext)
   const [isSignUp, setIsSignUp] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 730);
   const [username, setUsername] = useState('')
@@ -37,13 +39,15 @@ export default function Login2() {
         email,
         password
       },{ withCredentials: true })
+     
       console.log(res);
+      setuserData(res.data)
       setFirstName('')
       setLastName('')
       setUsername('')
       setEmail('')
       setPassword('')
-      navigate('/')
+      
     } catch (err) {
       setError(err.response?.data?.message || 'Server error or invalid input')
     }
@@ -61,10 +65,11 @@ export default function Login2() {
       }, { withCredentials: true })
      
         console.log(res);
+        setuserData(res.data)
         
         setEmail('')
         setPassword('')
-        navigate('/')
+        
       
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials or server error')

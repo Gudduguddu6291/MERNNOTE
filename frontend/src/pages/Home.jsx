@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import Nav from '../components/Nav'
 import { RxCross2 } from "react-icons/rx";
-
+import axios from 'axios';
+import { authDatacontext } from '../context/AuthContext';
 function Home() {
   const [notes,setnotes] = useState([])
   const [newnote,setnewnote] = useState({
@@ -9,12 +10,18 @@ function Home() {
     content: ""
   })
   const [showForm, setShowForm] = useState(false);
-
-  const handlechange = (e) => {
+  let {serverURL} = useContext(authDatacontext)
+  const handlechange = async (e) => {
     e.preventDefault();
     try {
       if (newnote.title || newnote.content) {
         setnotes([...notes, newnote])
+        let result = await axios.post(serverURL +"/api/notes/upload", {
+          title:newnote.title,
+          content:newnote.content
+        },{withCredentials:true} 
+        )
+        console.log(result)
         setnewnote({
           title: "",
           content: ""
@@ -51,7 +58,7 @@ function Home() {
           </div>
           <div className='w-full flex flex-col items-start justify-center'>
             <div className='w-full flex items-center bg-blue-900 text-white rounded-lg px-[10px] py-[5px] gap-[10px] h-[40px]'>
-              <button className='w-full border-none outline-none text-[23px]' onClick={()=>setShowForm(true)}>+ New Notes</button>
+              <button className='w-full border-none outline-none text-[23px]' onClick={()=>{setShowForm(true); setnewnote({ title: "", content: ""})}}>+ New Notes</button>
             </div> 
           </div>
          {notes &&  <div className='w-full flex flex-col gap-2 mt-4'>
