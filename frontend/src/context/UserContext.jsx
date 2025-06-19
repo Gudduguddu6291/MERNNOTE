@@ -3,20 +3,19 @@ import { authDatacontext } from './AuthContext';
 import { useContext } from 'react';
 import axios from 'axios';
 
-
-
 export const userDataContext = createContext();
 
 function UserContext ({children}) {
 
 let [userData,setuserData] = useState(null);
+let [notesData,setnotesData] = useState([]);
 let {serverURL} = useContext(authDatacontext);
 
 const getCurrentUser=async()=>{
     try {
         let result = await axios.get(serverURL+"/api/user/currentuser",
             {withCredentials:true})
-        console.log(result);
+        console.log(result.data)
         setuserData(result.data);
        
     } 
@@ -26,15 +25,26 @@ const getCurrentUser=async()=>{
     }
 }
 
+const getnotes = async()=>{
+    try {
+        let result = await axios.get(serverURL+"/api/notes/getnotes",{withCredentials:true})
+        console.log(result.data)
+        setnotesData(result.data)
+    }
+     catch (error) {
+        console.log(error)
+    }
+}
+
 
 
 useEffect(()=>{
-    getCurrentUser()
-    
+    getCurrentUser(),
+    getnotes()
 },[])
 
 
-const value={userData,setuserData,}
+const value={userData,setuserData,notesData,setnotesData}
 
    
   return (
