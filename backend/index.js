@@ -4,6 +4,8 @@ import connectDB from "./config/db.js";
 import authRouter from "./routes/auth.router.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import noteroute from "./routes/noteroute.js";
+import userrouter from "./routes/user.route.js";
 dotenv.config();
 let app = express();
 let port = process.env.PORT || 3000;
@@ -17,6 +19,8 @@ app.use(cors({
   credentials: true
 }));
 app.use("/api/auth/",authRouter)
+app.use("/api/notes/",noteroute)
+app.use("/api/user/",userrouter)
 connectDB();
 app.listen(port, () => {    
   console.log(`Server is running on port ${port}`);
