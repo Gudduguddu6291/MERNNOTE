@@ -1,7 +1,7 @@
-import moongoose from 'mongoose';
-const noteSchema = new moongoose.Schema({
+import mongoose from 'mongoose';
+const noteSchema = new mongoose.Schema({
     author:{
-        type: moongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref:"User"
     },
     title: {
@@ -19,9 +19,13 @@ const noteSchema = new moongoose.Schema({
     createdAt:{
         type: Date,
         default: Date.now
+    },
+    public_id: {
+    type: String,
+    required: false // added field to track Cloudinary file for deletion
     }
 
 },{timestamps:true});
 
-const Note = moongoose.model('Note', noteSchema);
+const Note = mongoose.model('Note', noteSchema);
 export default Note;

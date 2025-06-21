@@ -1,3 +1,4 @@
+// utils/cloudinaryUpload.js
 import { v2 as cloudinary } from 'cloudinary'
 import fs from 'fs'
 const uploadOnCloudinary = async (filePath) => {
@@ -14,9 +15,10 @@ const uploadOnCloudinary = async (filePath) => {
         flags: "attachment",          // This enables direct download/view
         use_filename: true,
         unique_filename: false
-});
-        fs.unlinkSync(filePath); // Delete the file after upload
-        return result.secure_url; // Return the URL of the uploaded image
+    });
+        fs.unlinkSync(filePath);
+        console.log(result);
+        return result.secure_url;
     } 
     catch (error) {
         fs.unlinkSync(filePath); // Delete the file in case of error
@@ -24,3 +26,5 @@ const uploadOnCloudinary = async (filePath) => {
     }
 }
 export default uploadOnCloudinary;
+
+

@@ -6,7 +6,7 @@ import { FaCaretDown } from "react-icons/fa6";
 import axios from 'axios';
 import { authDatacontext } from '../context/AuthContext';
 function Nav() {
-  let {userData,setuserData} = useContext(userDataContext) 
+  let {userData,setuserData,notesData,setnotesData} = useContext(userDataContext) 
   const [showDropdown,setDropDown] = useState(false)
   const navigate = useNavigate();
   let {serverURL} = useContext(authDatacontext)
@@ -16,6 +16,7 @@ function Nav() {
       withCredentials: true
     });
     setuserData(null);
+    setnotesData([]);
     // Add your sign out logic here (e.g., API call, redirect)
     navigate('/login');
     console.log("Sign out successful:", result.data);

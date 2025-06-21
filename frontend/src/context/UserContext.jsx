@@ -44,7 +44,7 @@ useEffect(()=>{
 },[])
 
 
-const value={userData,setuserData,notesData,setnotesData}
+const value={userData,setuserData,notesData,setnotesData,getnotes}
 
    
   return (

@@ -4,16 +4,29 @@ import { RxCross2 } from "react-icons/rx";
 import axios from 'axios';
 import { authDatacontext } from '../context/AuthContext';
 import { userDataContext } from '../context/UserContext';
+import { useEffect } from 'react';
+
+
 function Home() {
   const [notes,setnotes] = useState([])
-  let {notesData,setnotesData} = useContext(userDataContext);
+  let {userData,setuserData,notesData,setnotesData,getnotes} = useContext(userDataContext);
   const [newnote,setnewnote] = useState({
+    id:"",
     title: "",
     content: "",
     file:null,
+    fileUrl: ""
   })
   const [showForm, setShowForm] = useState(false);
   let {serverURL} = useContext(authDatacontext)
+
+  useEffect(() => {
+    if (userData) {
+      console.log("Fetching notes for user:", userData);
+      getnotes();
+    }
+  }, [userData]);
+ 
   const handlechange = async (e) => {
     e.preventDefault();
     try {
@@ -26,7 +39,7 @@ function Home() {
         const savedNote = result.data.result;
         setnotes([...notes, savedNote])
         setnotesData(prev=>[...prev, savedNote])
-        setnewnote({title: "",content: "",file:null})
+        setnewnote({ title: "", content: "", file: null, _id: "", fileUrl: "" });
         setShowForm(false);
         console.log("Note added successfully:", result.data);
       }
@@ -48,7 +61,7 @@ function Home() {
       setnotesData(prev => prev.filter(note => note._id !== noteId));
       setnotes(prev => prev.filter(note => note._id !== noteId));
       setShowForm(false);
-      setnewnote({title: "",content: ""})
+      setnewnote({ title: "", content: "", file: null, _id: "", fileUrl: "" });
       console.log("Note deleted successfully:", res.data);
     } 
     catch (error) {
@@ -65,18 +78,26 @@ function Home() {
       return;
     }
     try {
+        const formData = new FormData();
+        formData.append('title', note.title);
+        formData.append('content',note.content);
+        if (note.file) 
+        formData.append('file', note.file);
         let result = await axios.put(serverURL+`/api/notes/update/${noteId}`,
-          {title:note.title,content:note.content},{withCredentials:true});
-        setnotesData(prev=> prev.map(old =>old._id === noteId ? {...old,title:note.title,content:note.content}:old))
-        setnotes(prev =>prev.map(old =>old._id === noteId ? {...old,title:note.title,content:note.content}:old))
+        formData,{withCredentials:true});
+        const updatedNote = result.data.result;
+        setnotesData(prev=> prev.map(old =>old._id === noteId ? {...old,title:updatedNote.title,content:updatedNote.content,fileUrl:updatedNote.fileUrl}:old))
+        setnotes(prev =>prev.map(old =>old._id === noteId ? {...old,title:updatedNote.title,content:updatedNote.content,fileUrl:updatedNote.fileUrl}:old))
         setShowForm(false);
-        setnewnote({title: "",content: ""})
+        setnewnote({ title: "", content: "", file: null, _id: "", fileUrl: "" });
         console.log("Note updated successfully:", result.data);
     } 
     catch (error) {
       console.error("Error updating note:", error);
     }
    }
+
+   
 
   return (
     <div className="w-full min-h-[100vh] bg-[#f3edd2]">
@@ -88,16 +109,18 @@ function Home() {
           </div>
           <div className='w-full flex flex-col items-start justify-center'>
             <div className='w-full flex items-center bg-blue-900 text-white rounded-lg px-[10px] py-[5px] gap-[10px] h-[40px]'>
-              <button className='w-full border-none outline-none text-[23px]' onClick={()=>{setShowForm(true); setnewnote({ title: "", content: "",file:null})}}>+ New Notes</button>
+              <button className='w-full border-none outline-none text-[23px]' onClick={()=>{setShowForm(true); setnewnote({ title: "", content: "",file:null,fileUrl:""})}}>+ New Notes</button>
             </div> 
           </div>
           <div className='w-full flex flex-col gap-2 mt-4 overflow-y-auto max-h-[300px] scrollbar-hide'>
          {notesData.length>0 &&  <div className='w-full flex flex-col gap-2 mt-4'>
             {notesData.map((note, idx) => (
               <div key={note._id || idx} className="text-lg text-blue-900 font-semibold bg-blue-100 rounded px-2 py-1 flex items-center justify-between cursor-pointer" onClick={() => { setShowForm(true); setnewnote({
+                _id: note._id,
                 title: note.title,
                 content: note.content,
-                fileUrl: note.fileUrl
+                fileUrl: note.fileUrl,
+                file: null
                 });
                }}>
                 {note.title}
@@ -141,14 +164,22 @@ function Home() {
               />
               {/* Show PDF preview if fileUrl exists */}
               {newnote.fileUrl && (
-                <button
-                  type="button"
-                  onClick={() => window.open(newnote.fileUrl, '_blank')}
-                  className="text-blue-700 underline text-sm w-fit"
-                >
-                  Open attached PDF
-                </button>
-              )}
+              <div className="w-full flex items-center justify-between">
+              {/* Download Link */}
+              <a
+               href={newnote.fileUrl.replace('/upload/', '/upload/fl_attachment/')}
+              download="NoteAttachment.pdf"
+              className="text-green-700 underline text-sm w-fit"
+            >
+              Download attached PDF
+            </a>
+
+            {/* Preview Link */}
+            <a href={newnote.fileUrl} target="_blank" rel="noopener noreferrer"
+            className="text-blue-700 underline text-sm w-fit">
+              Preview attached PDF
+            </a>
+            </div>)}
 
               {/* File input to add new PDF */}
             <input
