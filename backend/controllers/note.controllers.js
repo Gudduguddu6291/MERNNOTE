@@ -7,11 +7,14 @@ import { v2 as cloudinary } from 'cloudinary'
 export const upload = async (req, res) => {
     try {
        let {title,content} = req.body;
+       let file
        let fileUrl = null;
        
        if(!title && !content) return res.status(400).json({message: "Title or content are required"});
         if(req.file)
-        fileUrl =await uploadOnCloudinary (req.file.path, "raw"); // specify resource_type 'auto' for all file types
+        file =await uploadOnCloudinary (req.file.path, "raw"); 
+        fileUrl=file.secure_url
+        
         const result = await Note.create({
             title,
             content,
@@ -46,69 +49,56 @@ export const updateNote = async (req, res) => {
   try {
     const { noteId } = req.params;
     const { title, content } = req.body;
+    const file = req.file;
 
-    if (!noteId) return res.status(400).json({ message: "Note Id is required" });
-    if (!title && !content && !req.file) {
-      return res.status(400).json({ message: "Nothing to update" });
-    }
+    if (!noteId) return res.status(400).json({ message: "Note ID is required" });
+    if (!title && !content && !file) return res.status(400).json({ message: "Nothing to update" });
 
-    console.log("User ID:", req.userId); // Make sure req.userId is being set properly
-    const note = await Note.findOne({ _id: noteId, author: req.userId });
-
-    if (!note) {
-      return res.status(403).json({ message: "Not authorized or note not found" });
-    }
+    const note = await Note.findById(noteId);
+    if (!note) return res.status(404).json({ message: "Note not found" });
 
     let fileUrl = note.fileUrl;
     let public_id = note.public_id;
 
-    if (req.file && req.file.path) {
-      // Delete old file from Cloudinary
-      if (public_id) {
+    if (file) {
+      if (note.public_id) {
         try {
-          await cloudinary.uploader.destroy(public_id, { resource_type: "raw" });
+          await cloudinary.uploader.destroy(note.public_id, { resource_type: "raw" });
         } catch (err) {
           console.error("Cloudinary delete error:", err.message);
         }
       }
 
-      // Upload new file to Cloudinary
-      const uploaded = await uploadOnCloudinary(req.file.path, "raw");
-      console.log("Uploaded File URL:", uploaded);
-
-      if (!uploaded?.secure_url) {
+      const upload = await uploadOnCloudinary(file.path, "raw");
+      if (!upload?.secure_url) {
         return res.status(500).json({ message: "Cloudinary upload failed" });
       }
 
-      fileUrl = uploaded.secure_url;
-      public_id = uploaded.public_id;
+      fileUrl = upload.secure_url;
+      public_id = upload.public_id;
 
-      // Delete local temp file safely
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
       }
     }
 
-    // Update fields
-    note.title = title ?? note.title;
-    note.content = content ?? note.content;
-   
-    note.public_id = public_id;
+    const updateFields = {};
+    if (title) updateFields.title = title;
+    if (content) updateFields.content = content;
+    if (fileUrl) updateFields.fileUrl = fileUrl;
+    if (public_id) updateFields.public_id = public_id;
 
-   try {
-      const result = await note.save();
-      return res.status(200).json({ message: "Note updated successfully", result });
-  } 
+    const updatedNote = await Note.findByIdAndUpdate(
+      noteId,
+      { $set: updateFields },
+      { new: true }
+    );
 
-  catch (saveError) {
-  console.error("Mongoose Save Error:", saveError);
-  return res.status(500).json({ message: saveError.message });
-  }
-    // Note.findByIdAndUpdate(public_id,{})
+    return res.status(200).json({ message: "Note updated successfully", updatedNote });
 
   } catch (error) {
-    console.error("Update Note Error:", error);
-    return res.status(500).json({ message: error.message || "Update Note Error" });
+    console.error("Update Error:", error);
+    return res.status(500).json({ message: "Update Error" });
   }
 };
 

@@ -21,11 +21,15 @@ function Home() {
   let {serverURL} = useContext(authDatacontext)
 
   useEffect(() => {
-    if (userData) {
+    if (userData ) {
       console.log("Fetching notes for user:", userData);
       getnotes();
     }
   }, [userData]);
+
+  useEffect(() => {
+  console.log("Fetched notesData:", notesData); // 👈 Check if fileUrl is present
+}, [notesData])
  
   const handlechange = async (e) => {
     e.preventDefault();
@@ -36,6 +40,7 @@ function Home() {
         formData.append('content', newnote.content);
         formData.append('file', newnote.file);
         let result = await axios.post(serverURL +"/api/notes/upload", formData, {withCredentials:true})
+        console.log(result.data)
         const savedNote = result.data.result;
         setnotes([...notes, savedNote])
         setnotesData(prev=>[...prev, savedNote])
@@ -85,9 +90,11 @@ function Home() {
         formData.append('file', note.file);
         let result = await axios.put(serverURL+`/api/notes/update/${noteId}`,
         formData,{withCredentials:true});
-        const updatedNote = result.data.result;
-        setnotesData(prev=> prev.map(old =>old._id === noteId ? {...old,title:updatedNote.title,content:updatedNote.content,fileUrl:updatedNote.fileUrl}:old))
-        setnotes(prev =>prev.map(old =>old._id === noteId ? {...old,title:updatedNote.title,content:updatedNote.content,fileUrl:updatedNote.fileUrl}:old))
+        const updatedNote = result.data.updatedNote;
+        console.log("Note updated:", updatedNote);
+
+        setnotesData(prev => prev.map(n => n._id === noteId ? updatedNote : n));
+        setnotes(prev => prev.map(n => n._id === noteId ? updatedNote : n));
         setShowForm(false);
         setnewnote({ title: "", content: "", file: null, _id: "", fileUrl: "" });
         console.log("Note updated successfully:", result.data);
