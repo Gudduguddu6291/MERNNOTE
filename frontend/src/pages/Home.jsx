@@ -5,9 +5,13 @@ import axios from 'axios';
 import { authDatacontext } from '../context/AuthContext';
 import { userDataContext } from '../context/UserContext';
 import { useEffect } from 'react';
-
+import { useRef } from 'react';
+import {io} from 'socket.io-client'
 
 function Home() {
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState("");
+  const socket = useRef(null);
   const [notes,setnotes] = useState([])
   let {userData,setuserData,notesData,setnotesData,getnotes} = useContext(userDataContext);
   const [newnote,setnewnote] = useState({
@@ -55,7 +59,9 @@ function Home() {
       console.error("Error adding note:", error);
     }
   }
-     
+  
+  
+
    async function handleDelete(noteId) {
     try {
       if (!noteId) {
@@ -103,6 +109,48 @@ function Home() {
       console.error("Error updating note:", error);
     }
    }
+
+  useEffect(() => {
+  
+  const fetchMessages = async () => {
+    try {
+      const res = await axios.get(`${serverURL}/api/chat/`, {
+        withCredentials: true,
+      });
+      setMessages(res.data); // Load old messages
+    } catch (error) {
+      console.error("Failed to load messages:", error.message);
+    }
+  };
+
+  fetchMessages(); 
+
+  
+  socket.current = io(serverURL, { withCredentials: true });
+
+  
+  socket.current.on("receive-message", (message) => {
+    console.log("Received message:", message); // Optional: for debugging
+    setMessages((prev) => [...prev, message]);
+  });
+  return () => {
+    socket.current.disconnect();
+  };
+}, []);
+
+const sendMessage = () => {
+  if (messageInput.trim() === "") return;
+
+  const message = {
+    sender: userData?.UserName || "Anonymous",
+    text: messageInput,
+    timestamp: new Date().toISOString(),
+    userId: userData?._id,
+  };
+
+  socket.current.emit("send-message", message);
+  setMessageInput(""); // Clear input immediately
+};
 
    
 
@@ -198,16 +246,40 @@ function Home() {
 
               <button
                 type="submit"
-                className="bg-blue-900 text-white rounded px-4 py-2 font-semibold hover:bg-blue-800 transition"
-              >
+                className="bg-blue-900 text-white rounded px-4 py-2 font-semibold hover:bg-blue-800 transition">
                 Save
               </button>
             </form>
           )}
         </div>
-        <div className="hidden lg:flex lg:w-[30%] lg:h-[500px] min-h-[500px] bg-white shadow-lg rounded-lg flex-col items-center justify-center px-[30px] py-[50px]">
-          {/* Right content */}
-        </div>
+        <div className="hidden lg:flex lg:w-[30%] lg:h-[500px] min-h-[500px] bg-white shadow-lg rounded-lg flex-col px-4 py-4">
+  <h2 className="text-xl font-bold text-blue-900 mb-2">Chat</h2>
+   
+  <div className="flex-1 overflow-y-auto mb-2 border p-2 rounded bg-gray-50 scrollbar-hide">
+    {messages.map((msg, idx) => (
+      <div key={idx} className="mb-2">
+        <span className="font-semibold text-blue-700">{msg?.author?.UserName||msg.sender}:</span>
+        <span className="ml-2">{msg.text}</span>
+      </div>
+    ))}
+  </div>
+  <div className="flex gap-2">
+    <input
+      type="text"
+      placeholder="Type a message"
+      className="flex-1 border rounded px-3 py-1"
+      value={messageInput}
+      onChange={e => setMessageInput(e.target.value)}
+    />
+    <button
+      className="bg-blue-900 text-white px-3 py-1 rounded"
+      onClick={sendMessage}
+    >
+      Send
+    </button>
+  </div>
+</div>
+
       </div>
     </div>
   )
