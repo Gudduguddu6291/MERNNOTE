@@ -104,11 +104,24 @@ export const updateNote = async (req, res) => {
 
 
 
-
 export const getnote = async(req,res)=>{
     try {
         const note = await Note.find({author:req.userId})
         .populate("author","firstName lastName UserName")
+        .sort({createdAt:-1})
+        return res.status(200).json(note)
+       
+    } 
+    catch (error) {
+        return res.status(500).json({message:"getnote error"})
+    }
+}
+
+
+
+export const getallnotes = async (req,res)=>{
+    try {
+        const note = await Note.find().populate("author","firstName lastName UserName")
         .sort({createdAt:-1})
         return res.status(200).json(note)
        
