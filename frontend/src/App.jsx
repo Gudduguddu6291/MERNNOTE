@@ -18,6 +18,7 @@ function App() {
         <Route path="/signup" element={userData?<Navigate to='/'/>:<Login2 />} /> 
         <Route path="/signin" element={userData?<Navigate to='/'/>:<Login2 />} />
         <Route path="/view" element={userData? <View/> : <Navigate to ="/signin"/> }/>
+        
         {/* Add more routes as needed */}
       </Routes>
     

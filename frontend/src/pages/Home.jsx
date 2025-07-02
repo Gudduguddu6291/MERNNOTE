@@ -23,6 +23,7 @@ function Home() {
   })
   const [showForm, setShowForm] = useState(false);
   let {serverURL} = useContext(authDatacontext)
+  const [showChat,setshowChat] = useState(false)
 
   useEffect(() => {
     if (userData ) {
@@ -152,13 +153,13 @@ const sendMessage = () => {
   setMessageInput(""); // Clear input immediately
 };
 
-   
+    const toggleChat = () => setshowChat(prev => !prev);
 
   return (
     <div className="w-full min-h-[100vh] bg-[#f3edd2]">
-      <Nav />
+      <Nav toggleChat={toggleChat}/>
       <div className="flex flex-col w-full lg:flex-row items-start justify-center gap-[20px] px-[20px] pt-[40px] ">
-        <div className="w-full h-[400px] lg:w-[30%] lg:h-[500px] min-h-[500px] bg-white shadow-lg rounded-lg flex flex-col items-center justify-start px-[30px] py-[20px] gap-[20px]">
+        <div className="w-full h-[200px] lg:w-[30%] lg:h-[500px] min-h-[500px] bg-white shadow-lg rounded-lg flex flex-col items-center justify-start px-[30px] py-[20px] gap-[20px]">
           <div className='w-full flex flex-col items-start justify-center'>
           <h1 className="text-[30px] font-bold text-[#333]">Notes</h1>
           </div>
@@ -281,6 +282,31 @@ const sendMessage = () => {
 </div>
 
       </div>
+
+       {showChat && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-center lg:hidden">
+          <div className="bg-white w-[90%] h-[80%] rounded-lg shadow-lg p-4 flex flex-col">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xl font-bold text-blue-900">Chat</h2>
+              <button onClick={toggleChat} className="text-red-500 font-bold text-lg">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto mb-2 border p-2 rounded bg-gray-50 scrollbar-hide">
+              {messages.map((msg, idx) => (
+                <div key={idx} className="mb-2">
+                  <span className="font-semibold text-blue-700">{msg?.author?.UserName || msg.sender}:</span>
+                  <span className="ml-2">{msg.text}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input type="text" placeholder="Type a message" className="flex-1 border rounded px-3 py-1"
+                value={messageInput} onChange={e => setMessageInput(e.target.value)} />
+              <button className="bg-blue-900 text-white px-3 py-1 rounded" onClick={sendMessage}>Send</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
