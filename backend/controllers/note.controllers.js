@@ -6,28 +6,33 @@ import { v2 as cloudinary } from 'cloudinary'
 
 export const upload = async (req, res) => {
     try {
-       let {title,content} = req.body;
-       let file
-       let fileUrl = null;
-       
-       if(!title && !content) return res.status(400).json({message: "Title or content are required"});
-        if(req.file)
-        file =await uploadOnCloudinary (req.file.path, "raw"); 
-        fileUrl=file.secure_url
-        
+        let { title, content } = req.body;
+        let fileUrl = null;
+
+        if (!title && !content) {
+            return res.status(400).json({ message: "Title or content are required" });
+        }
+
+        if (req.file) {
+            const file = await uploadOnCloudinary(req.file.path, "raw");
+            if (!file?.secure_url) {
+                return res.status(500).json({ message: "File upload failed" });
+            }
+            fileUrl = file.secure_url;
+        }
+
         const result = await Note.create({
             title,
             content,
             fileUrl,
             author: req.userId
         });
-        return res.status(201).json({message: "Upload Successfull", result});
-       }
-      catch (error) {
+        return res.status(201).json({ message: "Upload Successfull", result });
+    } catch (error) {
         console.error("Upload Error:", error);
-        return res.status(500).json({message: "Upload Error"});
-      }
+        return res.status(500).json({ message: "Upload Error" });
     }
+}
 
 
 
