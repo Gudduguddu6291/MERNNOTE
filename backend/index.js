@@ -19,13 +19,13 @@ app.get("/", (req, res) => {
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://mernnote-f4gs.onrender.com", // or your frontend URL
+  origin: "https://mernnote-frontend.onrender.com", // or your frontend URL
   credentials: true
 }));
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://mernnote-f4gs.onrender.com",
+    origin: "https://mernnote-frontend.onrender.com",
     credentials: true
   }
 });
